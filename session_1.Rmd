@@ -14,16 +14,16 @@ https://stat545.com/basic-data-care.html#buckle-your-seatbelt
 
 # Basics of R
 
+On the right is the console which we can write any code in. But when we close R this will all be gone. Snything we want to save to run or see again we should write it in a script. To run code, press Ctrl + Enter on current line, or Ctrl + shift + Enter to run entire script.
+Save it when done.
+
+
 ## Basic calculations
 
 ```{r}
 4 + 5
 
-62-54
-
-4*5
-
-62/4
+12*937
 
 2^5
 ```
@@ -51,7 +51,6 @@ fruit <- apples + oranges
 fruit
 
 # shortcut for assignment operator: Alt -
-
 ```
 
 Rules for names:
@@ -64,15 +63,13 @@ data_full
 data.full
 dataFull
 
-When we close R this will all be gone. For anything that we want to save and run again next time, we can write it in a script. To run code, press Ctrl + Enter on current line, or Ctrl + shift + Enter to run entire script.
-Save it when done.
-
 To make your code more readable, you can use comments using #. without this R tries to read it as code and you get an error, so need to use # so R will ignore it.
 shortcut: ctrl + shift + c
 
 # Vectors and data frames
 
 We'll probably want to store more than one piece of information in one variable, for this we can use a vector.
+
 ```{r}
 age <- c(29, 18, 34, 63, 56, 24, 53, 38)
 ```
@@ -133,7 +130,7 @@ In this instance, mean is the function and age is the argument. A function can h
 Packages are collections of functions and datasets that you can use in R but aren't automatically there at the beginning.
 
 ```{r}
-install.packages("ggplot2")
+#install.packages("ggplot2")
 library(ggplot2)
 ```
 ```{r}

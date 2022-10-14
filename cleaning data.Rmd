@@ -1,0 +1,686 @@
+---
+title: "cleaning data"
+output: 
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float: true
+    code_download: true
+date: "2022-09-02"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+example_data <- read.csv("example csv.csv")
+```
+
+# Tidyverse 
+
+Tidyverse is a collection of R packages that are extremely useful to data manipulation and analysis.
+
+```{r}
+library(tidyverse)
+```
+
+# Data frames and data types
+
+We are going to look at a dataset called msleep that is included in the tidyverse package.
+
+First, examine data using glimpse:
+```{r}
+View(msleep)
+```
+
+Some useful functions to get an overview of what your data looks like:
+```{r}
+head(msleep)
+tail(msleep)
+dim(msleep)
+str(msleep)
+names(msleep)
+```
+
+Note in the output of str() that data type (here either chr or num). 
+R has six data types:
+
+numeric: numbers like 1 and 16.823 (sometimes also called double).
+logical: true/false values (boolean): either TRUE or FALSE.
+character: text, e.g. "a", "Hello! I'm Ada." and "name@domain.com".
+integer: integer numbers, denoted in R by the letter L: 1L, 55L.
+complex: complex numbers, like 2+3i. 
+raw: used to hold raw bytes. 
+
+You will probably only need to think about the top three.
+
+## Numerical data
+
+summary() gives some descriptive information about the numerical variables
+```{r}
+summary(msleep)
+```
+Can use the $ sign to look at individual columns
+
+```{r}
+msleep$sleep_total
+```
+
+Useful functions:
+
+```{r}
+mean(msleep$sleep_total)      # Mean
+median(msleep$sleep_total)    # Median
+max(msleep$sleep_total)       # Max
+min(msleep$sleep_total)       # Min
+sd(msleep$sleep_total)        # Standard deviation
+var(msleep$sleep_total)       # Variance
+quantile(msleep$sleep_total)  # Various quantiles
+```
+To see how many/the proportion of rows that fulfil a certain criteria, e.g. the number of proportion of animals with >8 hours of sleep:
+
+```{r}
+sum(msleep$sleep_total > 8)   # Frequency (count)
+mean(msleep$sleep_total > 8)  # Relative frequency (proportion)
+```
+
+If you have missing data (which show as NA), some functions will show an NA, e.g.
+
+```{r}
+mean(msleep$sleep_rem)
+```
+
+Can ignore NAs with the na.rm = TRUE argument
+
+```{r}
+mean(msleep$sleep_rem, na.rm = TRUE)
+```
+
+## Categorical data
+
+With factor variables, we can look at frequencies and proportions: 
+```{r}
+table(msleep$vore)
+
+proportions(table(msleep$vore))
+```
+
+for single variables or for combinations of two categorical variables:
+
+```{r}
+# Counts:
+table(msleep$vore, msleep$conservation)
+
+# Proportions, per row:
+proportions(table(msleep$vore, msleep$conservation),
+            margin = 1)
+
+# Proportions, per column:
+proportions(table(msleep$vore, msleep$conservation),
+            margin = 2)
+```
+
+## Changing types
+
+Factors:
+Say you have a study with two groups, group 1 and group 2. The labels 1 and 2 are just labels, they could just as easily be group A and group B or group "experimental" and "control". 
+
+We need to tell R that these are categorical and not numerical. This is important because say for example you have 3 groups, 1,2 and 3, there's no way in which group 1 + group 2 = group 3. It also doesn't make sense to say that someone in group 3 is twice as far from someone in group 1 as someone in group 2. 
+We can tell R this by making the variable a factor, with the as.factor() function.
+
+```{r}
+group <- c(1,1,2,1,2,1,2,2,1)
+
+class(group)
+
+group <- as.factor(group)
+
+class(group)
+```
+
+# Using %>% pipes
+
+Within the tidyverse is a set of tools called *pipes*. These are operators that improve your code's readability and structure the code in such a way that you read the functions in the order that they are applied instead of inside out.
+E.g
+
+new_variable <- function_2(function_1(data)) 
+
+becomes 
+
+new_variable <- data %>% function_1 %>% function_2 
+
+For example:
+```{r}
+height <- c(160, 163, 170, 172,175, 178, 180, 182, 185, 190, 191, 190, 166)
+
+mean(log(height))
+
+height %>%
+  log %>%
+  mean
+```
+
+# Modifying a variable
+
+Say we want to change the sleep_total column to be in minutes instead of hours. For this we can use the *mutate* function
+```{r}
+msleep$sleep_total
+
+msleep <- msleep %>%
+  mutate(sleep_total = sleep_total*60)
+```
+
+Say we have a reversed item on a scale
+
+```{r}
+example_data <- example_data %>%
+  mutate(item_2R = 7 - item_2R,
+         item_4R = 7 - item_4R)
+```
+
+
+# Create a new variables
+
+The mutate function also allows the creation of a new variable.
+
+Say we want to create a column showing the ratio of brain weight to body weight:
+
+```{r}
+msleep <- msleep %>%
+  mutate(brain_body_ratio = 100*brainwt/bodywt)
+
+msleep
+```
+
+Say we want to create a column that has the mean value of the items in a scale
+
+```{r}
+example_data %>%
+  mutate(scale_mean = rowMeans(select(., item_1:item_4R)))
+```
+
+
+# Rename variable
+
+```{r}
+msleep <- msleep %>%
+  rename(sleep_total_mins = sleep_total)
+
+msleep
+```
+
+# Select or remove particular variables
+
+```{r}
+# can select each column by name
+msleep %>%
+  select(name, genus, vore, order, conservation)
+
+# or by range
+msleep %>%
+  select(name:conservation)
+
+# remove columns using the - sign
+msleep %>%
+  select(-genus)
+
+# Select depending on data type:
+msleep %>%
+  select_if(is.numeric)
+```
+
+# Recoding variables
+
+Say we have gender coded as 0 and 1, we might want to recode this explicitly as male and female for clarity.
+Or say we have items in a scale that have responses such as "Not at all", "Very much" that we want to recode as numeric:
+
+```{r}
+example_data %>%
+  mutate(item_5 = recode(item_5,
+                         "Extremely dissatisfied" = 1,
+                         "Very dissatisfied" = 2,
+                         "Somewhat dissatisfied" = 3,
+                         "Somewhat satisfied" = 4,
+                         "Very satisfied" = 5,
+                         "Extremely satisfied" = 6))
+
+example_data <- example_data %>%
+  mutate(item_5 = recode(item_5,
+                         `1` = "Extremely dissatisfied",
+                         `2` = "Very dissatisfied",
+                         `3` = "Somewhat dissatisfied",
+                         `4` = "Somewhat satisfied",
+                         `5` = "Very satisfied",
+                         `6` = "Extremely satisfied"))
+```
+
+# Grouped summaries
+
+Commonly we want to compute a function for each value of a variable. 
+Let's look at the airquality dataset:
+
+```{r}
+library(data.table)
+?airquality
+aq <- data.table(airquality)
+```
+
+What if we want to compare how a particular variable varies over the months - it would make sense to look at key summary values e.g. the mean and standard deviation for each month separately. This is how to do this using tidyverse:
+
+
+```{r}
+aq %>%
+  group_by(Month) %>%
+  summarise(meanTemp = mean(Temp))
+```
+
+If we have NA values there, we can use na.rm = TRUE argument:
+
+```{r}
+aq %>%
+  group_by(Month) %>%
+  summarise(meanOzone = mean(Ozone))
+
+aq %>%
+  group_by(Month) %>%
+  summarise(meanOzone = mean(Ozone, 
+                             na.rm = TRUE))
+```
+
+We can compute summary statistics that use multiple variables, or multiple summary statistics at once:
+
+```{r}
+aq %>%
+  group_by(Month) %>%
+  summarise(meanTemp = mean(Temp),
+            correlation = cor(Temp, Wind))
+```
+
+We can also summarise across many variables that share a property, for example say we want to create means for all numeric variables:
+
+```{r}
+aq %>%
+  group_by(Month) %>%
+  summarise(across(
+    where(is.numeric),
+    mean, na.rm = TRUE
+  ))
+```
+
+We can also simply count how many occurences there are of a particular variable using n():
+
+```{r}
+aq %>%
+  group_by(Month) %>%
+  summarise(days = n())
+```
+
+and the number of *distinct* occurences of a variable using n_distinct():
+
+```{r}
+aq %>% summarise(months = 
+  n_distinct(Month))
+```
+
+# Filling in missing values
+
+Sometimes we might want to fill in some missing values with the previous non-missing value.
+First let's put in some missing data in our dataset:
+
+```{r}
+aq$Month[c(2:3, 36:39, 70)] <- NA
+
+# Some values of Month are now missing:
+head(aq)
+```
+
+Let's fill in the gaps:
+
+```{r}
+aq %>% 
+  fill(Month) -> 
+  aq
+
+head(aq)
+```
+
+To fill them in with the _next_ non-missing value, use .direction = "up":
+
+```{r}
+aq %>% fill(Month,
+        .direction = "up") -> aq
+```
+
+# Combining multiple steps
+
+With the %>% function we can achieve multiple steps in one piece of code in a readable and ordered way.
+
+```{r}
+aq %>% fill(Month) %>% 
+       group_by(Month) %>%
+       summarise(days = n())
+```
+
+
+# Filtering
+
+Using slice:
+
+```{r}
+# By index:
+aq %>%
+  slice(4)
+
+# By range:
+aq %>%
+  slice(1:4)
+
+# By explicitly choosing rows:
+aq %>%
+  slice(c(2,6,7))
+
+# To remove rows:
+aq %>%
+  slice(-4)
+```
+
+Using conditions:
+
+```{r}
+aq %>%
+  filter(Temp > 90)
+
+aq %>%
+  filter(Month == 6)
+```
+
+Note: Look out for this double equals sign here, it means something different to the single equals sign. 
+= is an assignment operator (similar to <-), == is a logical comparison, i.e. we use this when we want to _test equality_. 
+Helpfully, if you get this wrong R will often recognise this and suggest in the error message that you need the double equals sign. 
+
+```{r, eval = FALSE}
+help("=")
+help("==")
+```
+
+Multiple conditions:
+
+```{r}
+aq %>% filter(Temp > 90,
+              Month == 6)
+```
+
+If you want to filter for one of multiple conditions, e.g. Temperature > 90 OR Month = 6:
+
+```{r}
+aq %>% filter(Temp > 90 |
+              Month == 6)
+```
+
+Some helpful functions for filtering:
+
+```{r}
+# remove duplicate rows:
+aq %>%
+  distinct()
+
+# remove rows with at least one missing variable
+aq %>%
+  drop_na
+
+# remove rows with NA in a specific column, e.g. those with NA in the Ozone column:
+aq %>%
+  drop_na("Ozone")
+```
+
+
+
+# Merging data from multiple sources
+
+It might be the case that for one project we have data from multiple sources that we want to combine into one data frame.
+For example, 
+
+```{r}
+rev_data <- read.csv("data/sales-rev.csv", sep = ";")
+weather_data <- read.csv("data/sales-weather.csv", sep = ";")
+
+str(rev_data)
+str(weather_data)
+```
+
+If you are lucky and the rows or columns match each other_exactly_ you can use bind to connect the two dataframes.
+
+Let's first extract three subsets of these dataframes: the revenue for January, the revenue for February and the weather for January:
+
+```{r}
+rev_data %>% filter(between(DATE,
+            as.Date("2020-01-01"),
+            as.Date("2020-01-31"))
+                    ) -> rev_jan
+
+rev_data %>% filter(between(DATE,
+            as.Date("2020-02-01"),
+            as.Date("2020-02-29"))
+                    ) -> rev_feb
+
+weather_data %>% filter(between(
+            DATE,
+            as.Date("2020-01-01"),
+            as.Date("2020-01-31"))
+                 ) -> weather_jan
+```
+
+We can see the rows of rev_jan and weather_jan correspond exactly, which means we can bind the columns together.
+Similarly, rev_jan and rev_feb have identical columns, so we could bind their rows together. 
+Let's see:
+
+```{r}
+bind_rows(rev_jan, rev_feb)
+bind_cols(rev_jan, weather_jan)
+```
+
+Unfortunately it will often be the case that the rows and columns don't match exactly and we want to use a common identifier present in each dataset to specify which rows/columns we want to be matched together.
+There are different possibilities for how to do this. 
+First we identify the variable that is in common between the datasets that we wish to use to connect the two. This is called a key. In this example, we'll use DATE as our key.
+
+* Inner join: If we want to only keep the rows that have a date that appears in *both* datasets. Any rows that have a DATE that only appears in one will be dropped. 
+* Outer join: If we want to keep all rows from both datasets, even if the DATE only appears in one of the dataframes. 
+
+There are three types of outer joins:
+
+* Left join: retains all rows from the first table. In the revenue example, this means all dates present in rev_data.
+* Right join: retains all rows from the second table. In the revenue example, this means all dates present in weather_data.
+* Full join: retains all rows present in at least one of the tables. In the revenue example, this means all dates present in at least one of rev_data and weather_data.
+
+```{r}
+rev_data %>% inner_join(
+                weather_data,
+                by = "DATE") 
+
+rev_data %>% left_join(
+                weather_data,
+                by = "DATE")
+
+rev_data %>% right_join(
+                  weather_data,
+                  by = "DATE") 
+
+rev_data %>% full_join(
+                weather_data,
+                by = "DATE")
+```
+
+> Datacamp course: Joining Data with dplyr
+
+# Basic Data Plotting
+
+We will use the ggplot2 package, which is already loaded when we load tidyverse so we don't have to load it separately.
+The syntax can look a bit confusing and unintuitive at first, and there are sometimes (depending on what kind of plot you want) simpler alternatives that are fine if you are just trying to get an overview of your data. But for reports where you want to have more flexibility for content, style and layout, ggplot can really come in handy.
+
+There's no single right or wrong way to make plots, it really depends on what you want to create and balancing that with the simplicity/complexity of the code. We'll go through some examples and then it's really up to you how you implement it yourself.
+
+## Scatter plot
+
+Let's start with a basic scatterplot using the msleep data, plotting total sleep against REM sleep time:
+
+For a basic scatter plot:
+
+```{r}
+data(msleep)
+plot(msleep$sleep_total, msleep$sleep_rem)
+```
+
+ggplot:
+
+```{r}
+ggplot(msleep, aes(x = sleep_total,
+                   y = sleep_rem)) +
+  geom_point()
+```
+ 
+We need three components:
+
+* the data set (here, msleep)
+* the aesthetics (the x axis, y axis)
+* geoms (what do we want to plot, e.g. geom_point for a scatter plot)
+
+So your ggplot function will always have the structure of 
+
+ggplot(data, aes) + geom
+
+## Simple style tips
+
+Personally I'm not a fan of the grey background, we can change this by adding a theme, e.g. theme_bw()
+
+```{r}
+ggplot(msleep, aes(x = sleep_total,
+                   y = sleep_rem)) +
+  geom_point() + 
+  theme_bw()
+```
+
+We can change the axis labels and title like so:
+
+```{r}
+ggplot(msleep, aes(x = sleep_total,
+                   y = sleep_rem)) +
+  geom_point() + 
+  theme_bw() +
+  labs(x = "Total sleep time",
+       y = "REM sleep time",
+       title = "Total vs REM Sleep Time")
+```
+
+We can plot different colors for different groups by adding a color argument to the aesthetic:
+
+```{r}
+ggplot(msleep, aes(x = sleep_total,
+                   y = sleep_rem,
+                   color = vore)) +
+  geom_point() + 
+  theme_bw() +
+  labs(x = "Total sleep time",
+       y = "REM sleep time",
+       title = "Total vs REM Sleep Time")
+```
+
+Let's create a plot to see how animals' brain weight is related to their body weight:
+
+```{r}
+ggplot(msleep, aes(brainwt, bodywt, colour = vore)) + 
+      geom_point() +
+      xlab("Brain weight") +
+      ylab("Total sleep time") +
+  theme_bw()
+```
+
+We have a couple of outliers that are making the overall pattern difficult to interpret. We can address this by changing the x-axis and y-axis limits (although be aware that we are now excluding some data points from the plot):
+```{r}
+ggplot(msleep, aes(brainwt, bodywt, colour = vore)) + 
+      geom_point() +
+      xlab("Brain weight") +
+      ylab("Total sleep time") +
+  theme_bw() +  
+  xlim(0, 2) +
+  ylim(0, 1000)
+```
+
+We can use facet_wrap to create a separate plot for different groups:
+
+```{r}
+ggplot(msleep, aes(x = sleep_total,
+                   y = sleep_rem)) +
+  geom_point() + 
+  theme_bw() +
+  labs(x = "Total sleep time",
+       y = "REM sleep time",
+       title = "Total vs REM Sleep Time") +
+  facet_wrap(~vore)
+
+```
+
+## Boxplots
+
+We can do this using base R or ggplot:
+
+```{r}
+boxplot(sleep_total ~ vore, data = msleep)
+
+
+ggplot(msleep, 
+       aes(vore, sleep_total)) +
+      geom_boxplot()
+```
+
+## Histograms
+
+```{r}
+# Base R:
+hist(msleep$sleep_total)
+
+# ggplot2:
+ggplot(msleep, aes(sleep_total)) +
+      geom_histogram()
+```
+
+## Bar charts
+
+```{r}
+# Base R
+barplot(table(msleep$vore))
+
+# ggplot2
+ggplot(msleep, aes(vore)) +
+      geom_bar()
+```
+
+
+## Saving plots
+
+We can assign a plot we make to a variable name, e.g. myPlot:
+
+```{r}
+myPlot <- ggplot(msleep, aes(sleep_total, sleep_rem)) +
+      geom_point()
+```
+
+We can then see this just by calling the variable name:
+
+```{r}
+myPlot
+```
+
+and add things later:
+
+```{r}
+myPlot + labs(title = "My Plot")
+```
+
+and finally save it:
+
+```{r}
+ggsave("myplot.pdf", myPlot, width = 5, height = 5)
+```
+
+

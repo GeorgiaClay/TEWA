@@ -1,0 +1,284 @@
+---
+title: "Session 1: Introduction"
+author: "Georgia Clay"
+output: 
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float: true
+    code_download: true
+date: "2022-10-18"
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***
+
+# Useful resources
+
+https://learningstatisticswithr.com/lsr-0.6.pdf \
+https://modernstatisticswithr.com/thebasics.html \
+https://stat545.com/ \
+Datacamp
+
+
+***
+
+# Why R?
+
+<br>
+
+* R is free and open-source, constantly being expanded and improved
+* R is a programming language (vs SPSS: point and click)
+* R makes reproducible and transparent research the norm
+* R great for data wrangling and visualization
+* R extremely flexible and compatible, makes collaboration easy
+
+<br>
+
+```{r, out.width='70%', fig.align='center', echo = F}
+knitr::include_graphics('images/Image1.png')
+```
+
+***
+
+# Basics of R
+
+<br>
+On the right is the *console* panel which we can write any code in. But when we close R this will all be gone. Anything we want to save to run or see again we should write it in a *script*. To open a new script, click File -> New File -> R Script.
+To run code in a script, press Ctrl + Enter on current line, or Ctrl + shift + Enter to run entire script.
+Save it when done.
+<br>
+
+## Basic calculations
+
+```{r}
+4 + 5
+
+12*937
+
+2^5
+```
+
+## Variable assignment
+
+```{r}
+x <- 5
+
+y <- "hello"
+
+z <- c(1,2,3)
+
+x
+y
+z
+```
+
+We can do anything with a variable that we can do with the information it stores.
+
+```{r}
+
+# calculations using variables
+
+apples <- 5
+oranges <- 8
+
+fruit <- apples + oranges
+fruit
+
+# shortcut for assignment operator: Alt -
+```
+
+Rules for names:
+
+| Cannot start with a digit or contain certain characters such as a comma or a space
+Names are case-sensitive: data is a different variable to Data which is different to DATA
+
+Conventions include using _ or .
+data_full
+data.full
+dataFull
+
+To make your code more readable, you can use comments using #. without this R tries to read it as code and you get an error, so need to use # so R will ignore it.
+shortcut: ctrl + shift + c
+
+# Vectors and data frames
+
+We'll probably want to store more than one piece of information in one variable, for this we can use a vector.
+
+```{r}
+age <- c(29, 18, 34, 63, 56, 24, 53, 38)
+```
+
+Numbers are called elements.
+We can then easily do something to each element in the vector:
+
+```{r}
+age.months <- age*12
+age.months
+```
+
+Can access specific elements using their index
+```{r}
+age[2]
+```
+and change them
+```{r}
+age[2] <- 28
+age
+```
+We can combine vectors into a table called a data frame.
+
+```{r}
+age.dataframe <- data.frame(age, age.months)
+age.dataframe
+```
+
+# Functions in R
+
+Once you have some data, you actually want to do something with it. To do so, you can use a function. This is just a ready-made set of instructions telling R what to do with the code.
+
+```{r}
+mean(age)
+```
+
+```{r}
+round(3.14159)
+
+round(3.14159, 2)
+```
+Here we have two arguments. In this function it's easy to remember which one means what, but in more complicated functions this isn't the case. That's why arguments can also have names, which allows us to specify arguments by name:
+
+```{r}
+round(x = 3.14159, digits = 2)
+```
+If you use argument names, it doesn't matter what order you type them in, but if you don't use names, you have to use the correct order. 
+To find out what arguments a function takes:
+
+```{r, eval = F}
+?round
+```
+
+Some arguments also have default values - e.g. in the first example, if you don't specify digits it will round to nearest whole number. So round has a default digits argument of 0.
+
+In this instance, mean is the function and age is the argument. A function can have any number of arguments from none upwards.
+
+```{r}
+height <- c(160, 163, 170, 172,175, 178, 180, 182, 185, 190, 191, 190, 166)
+weight <- c(53, 60 , 58, 70,60, 78, 75, 85, 70, 88, 92, 64, 70)
+
+cor(height, weight)
+```
+
+
+# Packages
+
+Packages are collections of functions and datasets that you can use in R but aren't automatically there at the beginning.
+If you try to run a function without the necessary package loaded, you'll get an error message saying "could not find function...". If you don't know what package the function came from, you can usually find out by Googling R followed by the function name or on a site like https://www.rdocumentation.org/
+
+You might also sometimes see something like psych::alpha(), which means the alpha function from the psych package. This is useful as sometimes multiple packages will each have a function with the same name and this avoids ambiguity to R and the reader.
+
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+
+
+#alpha(cars)
+library(psych)
+alpha(cars)
+```
+
+
+# Workspace and working directory
+
+At some point you will want to leave R and maybe come back to it later. Or run multiple analyses that you want to keep separate. Or communicate your analyses in R to the outside world.
+You need somewhere to store your work in R, preferably in a way that is organised and well-structured. 
+Can see where this currently is by typing getwd().
+Recommended to do this via 'Projects' - basically a folder where you will store your code, data, outputs, everything relating to a particular project you are working on.
+To create a new project, click File > New Project -> New Directory -> New Project
+Give it a suitable name and choose where you want to keep it. Then click 'Create Project'.
+
+You can also create sub-directories here to have a more clearly structured project. 
+
+
+When you close R it will ask if you want to save your workspace. Might seem tempting but generally not recommended as can cause problems further down the line. Can disable this in tools > global options.
+
+
+# Importing Data
+
+Where does R read your files from? If you don't specify otherwise, it's going to look in your current working directory. You can see this via getwd() and change via setwd().
+
+```{r}
+getwd()
+```
+
+Let's start by thinking about how to import data that is in your working directory. In my working directory I have an example excel and csv data sheet.
+
+To import an excel sheet, you first need to install and load the readxl package.
+
+```{r}
+imported.csv <- read.csv("example csv.csv")
+
+library(readxl)
+imported.xl <- read_xlsx("example excel.xlsx")
+
+imported.inquisit <- read.delim("example inquisit.iqdat")
+```
+
+You can have a look at your imported data sets either by clicking on them in the Environment, or using the View() function.
+The str() function will also give you more information about what variables are in your data set.
+
+```{r}
+View(imported.csv)
+str(imported.csv)
+```
+
+If the file is not in your working directory, you will get an error message
+
+```{r, eval = FALSE}
+import_nonexistent_data <- read.csv("doesnt exist.csv")
+```
+
+Tips: make sure you add the file extension and there are no typos.
+
+
+What if the data set is not in your working directory?
+One option is to use file_choose()
+
+```{r, eval = FALSE}
+imported.csv2 <- read.csv(file.choose())
+```
+
+Or type the file path from the working directory. 
+
+```{r}
+imported.inquisit2 <- read.delim("inquisit data/dataset1.iqdat")
+```
+
+
+```{r read Inquisit data, include = FALSE}
+
+# create empty dataframe
+
+data_all <- NULL
+
+# list all the files that are in a folder:
+data_files <- list.files("inquisit data")
+data_files
+
+# create a for loop to read in each of these files
+for (i in 1:length(data_files)) {
+  data_subject_i <- read.delim(paste0("inquisit data/",
+                                      data_files[i]))
+  data_all <- rbind(data_all, data_subject_i)
+}
+
+```
+
+
