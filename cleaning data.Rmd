@@ -1,5 +1,5 @@
 ---
-title: "cleaning data"
+title: "Cleaning Data"
 output: 
   html_document:
     theme: spacelab
