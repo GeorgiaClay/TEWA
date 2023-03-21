@@ -14,7 +14,7 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-example_data <- read.csv("example csv.csv")
+example_data <- read.csv("data/example csv.csv")
 ```
 
 # Tidyverse 
