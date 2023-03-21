@@ -1,0 +1,192 @@
+---
+title: "Session 2: Data Analysis"
+author: "Georgia Clay"
+output: 
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float: true
+    code_download: true
+date: "2023-01-09"
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assumptions in hypothesis testing
+
+* Randomness:
+The samples are random subsets of larger populations
+How to check this: Understand where the data came from
+
+* Independence:
+Each observation is independent.
+How to check this: Understand where teh data came from
+
+* Normality of sampling distributions:
+The sampling distribution is normally distributed.If the population is normally distributed, this assumption will be met. If the sampling distribution is not normally distributed, you can turn to non-parametric tests instead.
+How to check this:
+
+## QQ plots
+
+A quantile-quantile plot allows you to visually check whether a distribution is normal. Each data point is plotted as a single dot: if the data are normally distributed, the points should fall on a straight line.
+We can see this by generating data from a normal distribution and then plotting a QQ plot with this data.
+
+```{r qq plot}
+normal.data <- rnorm(n = 100)
+hist(x = normal.data)
+qqnorm(y = normal.data)
+qqline(y = normal.data)
+```
+
+Interpreting QQ Plots:
+https://towardsdatascience.com/q-q-plots-explained-5aa8495426c0
+
+## Shapiro-Wilk tests
+
+With a Shapiro-Wilk test, you are testing the null hypothesis that the data is normally distributed against the alternative hypothesis that the data is non-normally distributed. 
+The test statistic is `W`, which has a maximum value of 1 for perfectly normally distributed data.
+
+```{r}
+shapiro.test(x = normal.data)
+```
+
+# Correlation
+
+We can use the `cor.test()` function to test the hypothesis that two numerical variables are correlated:
+
+```{r}
+library(ggplot2)
+cor.test(msleep$sleep_total, msleep$brainwt,
+         use = "pairwise.complete")
+```
+
+The 'method' argument specifies whether you want to carry out the default Pearson correlation coefficient or the non-parametric Spearman or Kendall coefficients instead:
+
+```{r}
+cor.test(msleep$sleep_total, msleep$brainwt,
+         use = "pairwise.complete",
+         method = "spearman")
+```
+
+# T test
+
+We can use the function helpfully called `t.test()` to run different types of t-tests in R.
+
+For example:
+
+```{r}
+library(ggplot2)
+carnivores <- msleep[msleep$vore == "carni",]
+herbivores <- msleep[msleep$vore == "herbi",]
+t.test(carnivores$sleep_total, herbivores$sleep_total)
+```
+
+You can also use formula notation, e.g:
+
+```{r}
+t.test(sleep_total ~ vore, data = 
+         subset(msleep, vore == "carni" | vore == "herbi"))
+```
+
+You can also use pipes to first filter the two groups you want to compare, and then compute the t-test:
+
+```{r}
+library(dplyr)
+msleep %>% filter(vore == "carni" | vore == "herbi") %>% 
+        t.test(sleep_total ~ vore, data = .)
+```
+
+As you can see, there are many different ways of achieving the same results.
+
+This example demonstrated a two-sided t-test, where the null hypothesis being that there is no difference between the groups, and the alternative hypothesis being that there is a difference between groups, with no specification of which direction the difference would be in. 
+You can also use `t.test()` to compute a one-sided t-test if you have a directional hypothesis about which group will be larger than the other. Use the argument `alternative = "greater"` or `alternative = "less"` to specify whether you predict that the first group has a greater or smaller mean respectively.
+
+```{r}
+t.test(sleep_total ~ vore,
+       data = subset(msleep, vore == "carni" | vore == "herbi"),
+       alternative = "greater")
+```
+
+By default, R uses the Welch two-sample t-test which doesn't assume equal variance between the groups. If you want to override this, you can add the argument `var.equal = TRUE`.
+
+```{r}
+t.test(sleep_total ~ vore,
+       data = subset(msleep, vore == "carni" | vore == "herbi"),
+       var.equal = TRUE)
+``` 
+
+You can also compute one sample t-tests by specifying the value of $\mu$ in the function:
+
+```{r}
+t.test(msleep$sleep_total, mu = 7)
+```
+
+To compute a paired t-test, you can use the argument `paired = TRUE`:
+
+```{r}
+fair_diamonds <- subset(diamonds, cut == "Fair")
+t.test(fair_diamonds$x, fair_diamonds$y, paired = TRUE)
+```
+
+## Effect size
+
+```{r}
+library(lsr)
+cohensD(carnivores$sleep_total, herbivores$sleep_total)
+```
+
+## Non-parametric tests
+
+If your assumption of normality is violated, you can use a version of the t-test that doesn't make any assumptions about what kind of distribution your data has, known as the Wilcoxon-Mann-Whitney test. The function `wilcox.test()` works very similarly to `t.test()` in R.
+
+```{r}
+library(ggplot2)
+carnivores <- msleep[msleep$vore == "carni",]
+herbivores <- msleep[msleep$vore == "herbi",]
+wilcox.test(carnivores$sleep_total, herbivores$sleep_total)
+
+wilcox.test(sleep_total ~ vore, data =
+              subset(msleep, vore == "carni" | vore == "herbi"))
+```
+
+# ANOVA
+
+Note: make sure your grouping variable is of type *factor*. If for example you have a grouping variable that is labelled as numbers, R may assign this as a numeric variable and you will have to recode it to a factor variable.
+
+```{r}
+
+InsectSprays %>%
+  group_by(spray) %>%
+  summarise(mean_count = mean(count))
+
+ggplot(InsectSprays, aes(x=spray, y=count))+geom_boxplot()
+```
+
+```{r}
+mod <- aov(count ~ spray, data = InsectSprays)
+summary(mod)
+
+pairwise.t.test(InsectSprays$count, InsectSprays$spray)
+```
+
+types of SS
+
+```{r}
+m <- aov(mpg ~ cyl + am, data = mtcars)
+summary(m)
+
+library(car)
+Anova(m, type = "II")
+Anova(m, type = "III")
+
+R.version
+```
+
+
+

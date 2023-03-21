@@ -44,14 +44,15 @@ names(msleep)
 ```
 
 Note in the output of str() that data type (here either chr or num). 
+
 R has six data types:
 
-numeric: numbers like 1 and 16.823 (sometimes also called double).
-logical: true/false values (boolean): either TRUE or FALSE.
-character: text, e.g. "a", "Hello! I'm Ada." and "name@domain.com".
-integer: integer numbers, denoted in R by the letter L: 1L, 55L.
-complex: complex numbers, like 2+3i. 
-raw: used to hold raw bytes. 
+*numeric: numbers like 1 and 16.823 (sometimes also called double).
+*logical: true/false values (boolean): either TRUE or FALSE.
+*character: text, e.g. "a", "Hello! I'm Ada." and "name@domain.com".
+*integer: integer numbers, denoted in R by the letter L: 1L, 55L.
+*complex: complex numbers, like 2+3i. 
+*raw: used to hold raw bytes. 
 
 You will probably only need to think about the top three.
 
